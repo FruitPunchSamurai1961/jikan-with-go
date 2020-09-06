@@ -1,5 +1,5 @@
 //these are all the structs that are common among some or most of the other requests made
-package jikan
+package main
 
 import (
 	"encoding/json"
@@ -25,14 +25,14 @@ func getData(url string, target interface{}) error {
 //shared by anime and manga struct
 type Prop struct {
 	From struct {
-		Day   string `json:"day"`
-		Month string `json:"month"`
-		Year  string `json:"year"`
+		Day   int `json:"day"`
+		Month int `json:"month"`
+		Year  int `json:"year"`
 	}
 	To struct {
-		Day   string `json:"day"`
-		Month string `json:"month"`
-		Year  string `json:"year"`
+		Day   int `json:"day"`
+		Month int `json:"month"`
+		Year  int `json:"year"`
 	}
 }
 
