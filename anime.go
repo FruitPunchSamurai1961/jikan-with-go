@@ -38,7 +38,7 @@ type Anime struct {
 	EndingThemes  string   `json:"ending_themes"`
 }
 
-func getAnimeByID(id int) (Anime, error) {
+func GetAnimeById(id int) (Anime, error) {
 	animeData := Anime{}
 	request := "/anime" + strconv.Itoa(id)
 	err := getData(request, &animeData)
