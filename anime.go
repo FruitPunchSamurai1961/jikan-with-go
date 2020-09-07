@@ -1,6 +1,7 @@
-package main
+package jikan
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 )
@@ -84,8 +85,24 @@ type EpisodeDetail struct {
 }
 
 type EpisodeRange struct {
-	Start int
-	End   int
+	Start, End int
+}
+
+//News structs for the "/news" endpoint
+type News struct {
+	Articles []Article `json:"articles"`
+}
+
+type Article struct {
+	Url        string `json:"url"`
+	Title      string `json:"title"`
+	Date       string `json:"date"`
+	AuthorName string `json:"author_name"`
+	AuthorUrl  string `json:"author_url"`
+	ForumUrl   string `json:"forum_url"`
+	ImageUrl   string `json:"image_url"`
+	Comments   int    `json:"comments"`
+	Intro      string `json:"intro"`
 }
 
 //This struct is to handle errors and help the developer debug
@@ -117,8 +134,8 @@ func GetAnimeCharactersStaff(id int) (AnimeCharactersStaff, error) {
 	if err != nil {
 		return AnimeCharactersStaff{}, err
 	}
-	if len(animeCharactersStaffData.Characters) == 0 && len(animeCharactersStaffData.Staff) == 0{
-		fmt.Println("The reason you got {[] []} as the data is one of the two following reasons:\n" +
+	if len(animeCharactersStaffData.Characters) == 0 && len(animeCharactersStaffData.Staff) == 0 {
+		return AnimeCharactersStaff{}, errors.New("The reason you got {[] []} as the data is one of the two following reasons:\n" +
 			"1. The API just isn't cooperating, so it returns nothing. Nothing we can do here.\n" +
 			"2. The ID just doesn't exist. Try the GetAnimeByID method to see if it gives you a better error code! :)")
 	}
@@ -144,4 +161,64 @@ func GetEpisodeList(id int) (EpisodesList, error) {
 		i++
 	}
 	return episodeList, nil
+}
+
+// function to get only the specific episodes from the given anime
+func GetEpisodesRange(id int, episodeRange EpisodeRange) (EpisodesList, error) {
+	i := 0
+	if episodeRange.Start%100 == 0 {
+		i = episodeRange.Start / 100
+	} else {
+		i = (episodeRange.Start / 100) + 1
+	}
+	res := EpisodesList{}
+	if episodeRange.Start > episodeRange.End && episodeRange.End != 0 {
+		return EpisodesList{}, errors.New("the End int must be greater than the Start int")
+	}
+	if episodeRange.End == 0 {
+		url := fmt.Sprintf("/anime/%v/episodes/%v", id, i)
+		err := getData(url, &res)
+		if err != nil {
+			return EpisodesList{}, err
+		}
+		for i <= res.EpisodesLastPage {
+			i++
+			tmp := EpisodesList{}
+			url := fmt.Sprintf("/anime/%v/episodes/%v", id, i)
+			err := getData(url, &tmp)
+			if err != nil {
+				return EpisodesList{}, err
+			}
+			res.Episodes = append(res.Episodes, tmp.Episodes...)
+		}
+	} else {
+		end := episodeRange.End / 100
+		for i <= end+1 {
+			tmp := EpisodesList{}
+			url := fmt.Sprintf("/anime/%v/episodes/%v", id, i)
+			err := getData(url, &tmp)
+			if err != nil {
+				return EpisodesList{}, err
+			}
+			res.Episodes = append(res.Episodes, tmp.Episodes...)
+			i++
+		}
+	}
+	diff := episodeRange.Start - res.Episodes[0].EpisodeID
+	res.Episodes = res.Episodes[diff:]
+	if len(res.Episodes) == 0 {
+		return EpisodesList{}, errors.New("please check your episode range as the API is giving an error of no episodes in that range for the specified anime")
+	}
+	return res, nil
+}
+
+//function to get the news related to the anime
+func getNews(id int) (News, error) {
+	res := News{}
+	url := fmt.Sprintf("/anime/%v/news", id)
+	err := getData(url, &res)
+	if err != nil {
+		return News{}, err
+	}
+	return res, nil
 }

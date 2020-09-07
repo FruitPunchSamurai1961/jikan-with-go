@@ -1,5 +1,5 @@
 //these are all the structs that are common among some or most of the other requests made
-package main
+package jikan
 
 import (
 	"encoding/json"
