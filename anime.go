@@ -113,6 +113,16 @@ type Error struct {
 	Error   string `json:"error"`
 }
 
+//This Struct is to handle the pictures endpoint of getting a developer's anime
+type Pics struct {
+	Pictures []Picture `json:"pictures"`
+}
+
+type Picture struct {
+	Large string `json:"large"`
+	Small string `json:"small"`
+}
+
 //gets the anime details using Anime struct
 func GetAnimeById(id int) (Anime, Error) {
 	animeData := Anime{}
@@ -219,6 +229,17 @@ func getNews(id int) (News, error) {
 	err := getData(url, &res)
 	if err != nil {
 		return News{}, err
+	}
+	return res, nil
+}
+
+//function to get the pics related to developer's selected anime
+func getPics(id int) (Pics, error) {
+	res := Pics{}
+	url := fmt.Sprintf("/anime/%v/pictures", id)
+	err := getData(url, &res)
+	if err != nil {
+		return Pics{}, err
 	}
 	return res, nil
 }
